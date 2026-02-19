@@ -94,32 +94,38 @@ def format_report(url: str, report: dict) -> str:
         emoji = "❌"
 
     message = f"{emoji} *SEO Отчёт*\n\n"
-    message += f"🔗 URL: {url}\n"
+    message += f"🔗 {url}\n"
     message += f"⭐ Оценка: {score:.1f}/10\n\n"
 
+    # Show summary
+    message += f"📊 *Итого:*\n"
     if checks_ok > 0:
         message += f"✅ Успешно: {checks_ok}\n"
     if problems_critical > 0:
-        message += f"🔴 Критичные проблемы: {problems_critical}\n"
+        message += f"🔴 Критичных: {problems_critical}\n"
     if problems_important > 0:
-        message += f"🟡 Важные проблемы: {problems_important}\n"
+        message += f"🟡 Важных: {problems_important}\n"
 
-    # Add top priorities
-    top_priorities = report.get("top_priorities", [])
-    if top_priorities:
-        message += f"\n🎯 *Приоритетные задачи:*\n"
-        for i, priority in enumerate(top_priorities[:3], 1):
-            title = priority.get("title", "")
-            message += f"{i}. {title}\n"
+    # Show problems first (most important)
+    detailed_checks = report.get("detailed_checks", [])
+    problems = [c for c in detailed_checks if c.get("status") == "problem"]
+    
+    if problems:
+        message += f"\n🔴 *Что нужно исправить:*\n"
+        for check in problems:
+            name = check.get("name", "")
+            msg = check.get("message", "").replace("✅", "").replace("⚠️", "").replace("❌", "").strip()
+            message += f"\n• *{name}*\n{msg}\n"
 
-    # Add categories summary
-    categories = report.get("categories", [])
-    if categories:
-        message += f"\n📊 *По категориям:*\n"
-        for category in categories:
-            cat_name = category.get("name", "")
-            passed = category.get("checks_passed", 0)
-            total = category.get("total_checks", 0)
-            message += f"• {cat_name}: {passed}/{total}\n"
+    # Show successful checks
+    ok_checks = [c for c in detailed_checks if c.get("status") == "ok"]
+    if ok_checks:
+        message += f"\n✅ *Что уже хорошо:*\n"
+        for check in ok_checks[:3]:  # Show first 3
+            name = check.get("name", "")
+            message += f"• {name}\n"
+        
+        if len(ok_checks) > 3:
+            message += f"• _и ещё {len(ok_checks) - 3} проверок_\n"
 
     return message

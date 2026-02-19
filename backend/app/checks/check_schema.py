@@ -57,7 +57,7 @@ async def check_schema_microdata(
                             pass
                     
                     pages_checked += 1
-            except (httpx.TimeoutException, httpx.HTTPError):
+            except (httpx.TimeoutException, httpx.RequestError):  # Changed: use RequestError instead of HTTPError
                 continue
         
         if pages_checked == 0:

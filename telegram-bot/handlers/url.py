@@ -70,7 +70,11 @@ async def handle_url(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         else:
             # Success - format and send report
             message = format_report(text, result)
-            await update.message.reply_text(message, parse_mode="Markdown")
+            await update.message.reply_text(
+                message, 
+                parse_mode="Markdown",
+                disable_web_page_preview=True
+            )
 
     except Exception as e:
         logger.error(f"Error checking URL {text}: {e}")
@@ -104,7 +108,6 @@ def format_report(url: str, report: dict) -> str:
         emoji = "❌"
 
     message = f"{emoji} *SEO Отчёт*\n\n"
-    message += f"🔗 {url}\n"
     message += f"⭐ Оценка: {score:.1f}/10\n\n"
 
     # Show summary
@@ -153,5 +156,28 @@ def format_report(url: str, report: dict) -> str:
             name = check.get("name", "")
             msg = check.get("message", "").replace("✅", "").replace("⚠️", "").replace("❌", "").strip()
             message += f"\n*{name}*\n{msg}\n"
+
+    # Add CTA based on score
+    message += "\n" + "─" * 30 + "\n\n"
+    
+    if score >= 7.0:
+        # Good score CTA
+        message += (
+            "🎉 *Отличный результат!*\n\n"
+            "Хотите ещё больше трафика из поиска?\n"
+            "→ Подключите Ida.Lite — конструктор сайтов для застройщиков с SEO из коробки\n\n"
+            "🔗 idalite.ru"
+        )
+    else:
+        # Bad score CTA
+        message += (
+            "⚠️ *Есть что исправлять!*\n\n"
+            "На сайтах Ida.Lite все эти проблемы решаются автоматически:\n"
+            "✅ Правильные meta-теги\n"
+            "✅ Schema.org разметка\n"
+            "✅ Корректный robots.txt и sitemap\n\n"
+            "Переходите на Ida.Lite — сэкономьте месяцы доработок!\n\n"
+            "🔗 idalite.ru"
+        )
 
     return message

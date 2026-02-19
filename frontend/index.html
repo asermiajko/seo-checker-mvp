@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEO-чекер для сайтов застройщиков — Бесплатная проверка | Ida.Lite</title>
+    <meta name="description" content="Проверьте SEO вашего сайта за 60 секунд. 13 автоматических проверок базовых настроек для сайтов застройщиков. Отчёт в Telegram.">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header__container">
+            <div class="header__logo">
+                <a href="https://idalite.ru" class="logo">
+                    <span class="logo__text">Ida.Lite</span>
+                </a>
+            </div>
+            <nav class="header__nav">
+                <a href="https://idalite.ru" class="nav__link">Главная</a>
+                <a href="https://updates.idalite.ru" class="nav__link">Обновления</a>
+                <a href="#" class="nav__link">Контакты</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Hero Section -->
+        <section class="hero">
+            <h1 class="hero__title">Проверьте SEO вашего сайта за 60 секунд</h1>
+            <p class="hero__subtitle">Бесплатный анализ базовых SEO-настроек для сайтов застройщиков</p>
+            
+            <div class="hero__features">
+                <div class="feature">
+                    <span class="feature__icon">⚡</span>
+                    <span class="feature__text">Быстро</span>
+                </div>
+                <div class="feature">
+                    <span class="feature__icon">🎯</span>
+                    <span class="feature__text">13 проверок</span>
+                </div>
+                <div class="feature">
+                    <span class="feature__icon">📱</span>
+                    <span class="feature__text">Отчёт в Telegram</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Form Section -->
+        <section class="form-section">
+            <form id="seoCheckForm" class="form">
+                <div class="form__group">
+                    <label for="siteUrl" class="form__label">Адрес вашего сайта</label>
+                    <input 
+                        type="url" 
+                        id="siteUrl" 
+                        name="siteUrl" 
+                        class="form__input" 
+                        placeholder="https://example.ru"
+                        required
+                    >
+                    <span class="form__hint">Введите полный URL с https://</span>
+                </div>
+
+                <button type="submit" class="form__button" id="submitButton">
+                    <span class="button__icon">📱</span>
+                    <span class="button__text">Получить отчёт в Telegram</span>
+                </button>
+
+                <div class="form__info">
+                    <p class="form__info-text">
+                        <span class="form__info-icon">ℹ️</span>
+                        После нажатия откроется Telegram-бот. Напишите /start — отчёт придёт автоматически.
+                    </p>
+                </div>
+
+                <p class="form__privacy">
+                    Нажимая кнопку, вы соглашаетесь с 
+                    <a href="#" class="form__link">политикой конфиденциальности</a>
+                </p>
+            </form>
+
+            <!-- Status Messages -->
+            <div id="statusMessage" class="status-message" style="display: none;">
+                <div class="status-message__content">
+                    <span class="status-message__icon" id="statusIcon"></span>
+                    <p class="status-message__text" id="statusText"></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- What We Check Section -->
+        <section class="checks-section">
+            <h2 class="section__title">Что проверяем</h2>
+            
+            <div class="checks-grid">
+                <div class="check-card">
+                    <div class="check-card__header">
+                        <span class="check-card__icon">⚙️</span>
+                        <h3 class="check-card__title">Техническая база</h3>
+                    </div>
+                    <ul class="check-card__list">
+                        <li>Robots.txt и Sitemap.xml</li>
+                        <li>Скорость загрузки</li>
+                        <li>HTML-карта сайта</li>
+                        <li>Закрытие от индексации</li>
+                    </ul>
+                </div>
+
+                <div class="check-card">
+                    <div class="check-card__header">
+                        <span class="check-card__icon">📝</span>
+                        <h3 class="check-card__title">Структура контента</h3>
+                    </div>
+                    <ul class="check-card__list">
+                        <li>Title и Description</li>
+                        <li>Заголовки H1-H2</li>
+                        <li>Фильтровые страницы</li>
+                    </ul>
+                </div>
+
+                <div class="check-card">
+                    <div class="check-card__header">
+                        <span class="check-card__icon">🏷</span>
+                        <h3 class="check-card__title">Микроразметка</h3>
+                    </div>
+                    <ul class="check-card__list">
+                        <li>Schema.org разметка</li>
+                        <li>OpenGraph для соцсетей</li>
+                        <li>Canonical теги</li>
+                    </ul>
+                </div>
+
+                <div class="check-card">
+                    <div class="check-card__header">
+                        <span class="check-card__icon">📈</span>
+                        <h3 class="check-card__title">Аналитика</h3>
+                    </div>
+                    <ul class="check-card__list">
+                        <li>Яндекс.Метрика</li>
+                        <li>Google Analytics</li>
+                        <li>Локальное SEO</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section class="cta-section">
+            <div class="cta-card">
+                <h2 class="cta-card__title">Все проблемы решаются за 1 час в Ida.Lite</h2>
+                <p class="cta-card__text">
+                    На сайтах, сделанных в конструкторе Ida.Lite, все SEO-настройки работают из коробки
+                </p>
+                <div class="cta-card__buttons">
+                    <a href="#" class="cta-button cta-button--primary">Попробовать бесплатно</a>
+                    <a href="#" class="cta-button cta-button--secondary">Записаться на демо</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ Section -->
+        <section class="faq-section">
+            <h2 class="section__title">Часто задаваемые вопросы</h2>
+            
+            <div class="faq-list">
+                <div class="faq-item">
+                    <h3 class="faq-item__question">Сколько времени занимает проверка?</h3>
+                    <p class="faq-item__answer">Обычно 30-60 секунд. Мы проверяем 13 важных SEO-параметров вашего сайта асинхронно.</p>
+                </div>
+                
+                <div class="faq-item">
+                    <h3 class="faq-item__question">Это действительно бесплатно?</h3>
+                    <p class="faq-item__answer">Да, полностью бесплатно. Никаких скрытых платежей или подписок.</p>
+                </div>
+                
+                <div class="faq-item">
+                    <h3 class="faq-item__question">Что если я не получу отчёт в Telegram?</h3>
+                    <p class="faq-item__answer">Проверьте, что вы указали правильный username (с @), и что у вас открыты личные сообщения для ботов в настройках Telegram.</p>
+                </div>
+                
+                <div class="faq-item">
+                    <h3 class="faq-item__question">Подходит ли проверка для любых сайтов?</h3>
+                    <p class="faq-item__answer">Инструмент оптимизирован для сайтов застройщиков, но базовые SEO-проверки актуальны для любого сайта недвижимости.</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer__container">
+            <div class="footer__top">
+                <div class="footer__column">
+                    <h4 class="footer__title">Ida.Lite</h4>
+                    <p class="footer__text">Конструктор сайтов для застройщиков с SEO из коробки</p>
+                </div>
+                
+                <div class="footer__column">
+                    <h4 class="footer__title">Продукт</h4>
+                    <ul class="footer__links">
+                        <li><a href="https://idalite.ru" class="footer__link">Возможности</a></li>
+                        <li><a href="https://updates.idalite.ru" class="footer__link">Обновления</a></li>
+                        <li><a href="#" class="footer__link">Тарифы</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer__column">
+                    <h4 class="footer__title">Поддержка</h4>
+                    <ul class="footer__links">
+                        <li><a href="#" class="footer__link">Документация</a></li>
+                        <li><a href="#" class="footer__link">FAQ</a></li>
+                        <li><a href="#" class="footer__link">Контакты</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer__column">
+                    <h4 class="footer__title">Контакты</h4>
+                    <ul class="footer__links">
+                        <li><a href="tel:+74950328797" class="footer__link">+7 (495) 032-87-97</a></li>
+                        <li><a href="mailto:hello@idalite.ru" class="footer__link">hello@idalite.ru</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer__bottom">
+                <p class="footer__copyright">© 2026 Ida.Lite. Все права защищены.</p>
+                <div class="footer__legal">
+                    <a href="#" class="footer__legal-link">Политика конфиденциальности</a>
+                    <a href="#" class="footer__legal-link">Пользовательское соглашение</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

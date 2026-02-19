@@ -1,0 +1,1 @@
+"""SEO checks implementation."""

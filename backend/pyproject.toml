@@ -1,0 +1,49 @@
+[project]
+name = "seo-checker-backend"
+version = "1.0.0"
+description = "SEO Checker Backend API"
+requires-python = ">=3.9"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+select = ["E", "F", "I", "N", "W", "UP"]
+
+[tool.ruff.lint]
+ignore = ["UP007"]  # Allow Optional[X] instead of X | None for Python 3.9
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_functions = "test_*"
+asyncio_mode = "auto"
+markers = [
+    "e2e: End-to-end tests with real HTTP requests (deselect with '-m \"not e2e\"')",
+]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "--cov=app",
+    "--cov-report=term-missing:skip-covered",
+]
+
+[tool.coverage.run]
+source = ["app"]
+omit = [
+    "*/tests/*",
+    "*/__pycache__/*",
+    "*/.venv/*",
+]
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]

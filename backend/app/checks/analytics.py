@@ -34,13 +34,15 @@ async def check_analytics(site_url: str, client: httpx.AsyncClient) -> CheckResu
 
         html = response.text.lower()
 
-        # Check for Yandex.Metrika (more patterns)
+        # Check for Yandex.Metrika (multiple patterns for reliability)
         has_yandex = (
             "mc.yandex.ru/metrika" in html
             or "metrika/tag.js" in html
             or "metrika/watch.js" in html
-            or "ym(26708190" in html  # Known a101.ru counter
-            or 'content="26708190"' in html
+            or "mc.yandex.ru/watch/" in html  # noscript img pattern
+            or "/watch/26708190" in html  # specific counter in watch URL
+            or "ym(26708190" in html  # JS counter init
+            or 'content="26708190"' in html  # meta tag
         )
 
         # Check for Google Analytics

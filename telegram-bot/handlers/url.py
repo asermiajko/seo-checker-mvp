@@ -24,6 +24,10 @@ async def handle_url(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     user_id = update.effective_user.id
     text = update.message.text.strip()
 
+    # Auto-add https:// if missing
+    if not text.startswith(('http://', 'https://')):
+        text = 'https://' + text
+
     # Validate URL format (simplified to support punycode/cyrillic domains)
     url_pattern = re.compile(
         r'^https?://'  # http:// or https://
@@ -36,14 +40,14 @@ async def handle_url(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     if not url_pattern.match(text):
         await update.message.reply_text(
             "❌ Некорректный URL.\n\n"
-            "Пожалуйста, отправьте корректный URL сайта (например: https://example.com)"
+            "Пожалуйста, отправьте корректный URL сайта (например: example.com или https://example.com)"
         )
         return
 
     # Show processing message
     processing_msg = await update.message.reply_text(
         "⏳ Проверяю сайт, пожалуйста подождите...\n\n"
-        f"URL: {text}\n\n"
+        f"🔗 {text}\n\n"
         "⏱ Обычно проверка занимает 10-15 секунд"
     )
 

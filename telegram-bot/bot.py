@@ -3,10 +3,11 @@
 import os
 import logging
 from telegram import Update
-from telegram.ext import Application, CommandHandler
+from telegram.ext import Application, CommandHandler, MessageHandler, filters
 
 from handlers.start import start_command
 from handlers.help import help_command
+from handlers.url import handle_url
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -27,6 +28,9 @@ def main() -> None:
 
     application.add_handler(CommandHandler("start", start_command))
     application.add_handler(CommandHandler("help", help_command))
+    
+    # Handle text messages (URLs)
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_url))
 
     logger.info(f"🤖 Bot starting... API URL: {API_URL}")
     application.run_polling(allowed_updates=Update.ALL_TYPES)

@@ -108,7 +108,8 @@ def format_report(url: str, report: dict) -> str:
     # Get detailed checks
     detailed_checks = report.get("detailed_checks", [])
     critical_problems = [c for c in detailed_checks if c.get("status") == "problem" and c.get("severity") == "critical"]
-    important_problems = [c for c in detailed_checks if c.get("status") == "problem" and c.get("severity") == "important"]
+    important_problems = [c for c in detailed_checks if c.get("severity") == "important" and c.get("status") in ["problem", "partial"]]
+    partial_checks = [c for c in detailed_checks if c.get("status") == "partial" and c.get("severity") not in ["critical", "important"]]
     ok_checks = [c for c in detailed_checks if c.get("status") == "ok"]
     
     # Show critical problems first
@@ -123,6 +124,14 @@ def format_report(url: str, report: dict) -> str:
     if important_problems:
         message += f"\n🟡 *Важные проблемы:*\n"
         for check in important_problems:
+            name = check.get("name", "")
+            msg = check.get("message", "").replace("✅", "").replace("⚠️", "").replace("❌", "").strip()
+            message += f"\n*{name}*\n{msg}\n"
+    
+    # Show partial checks (minor issues)
+    if partial_checks:
+        message += f"\n⚠️ *Можно улучшить:*\n"
+        for check in partial_checks:
             name = check.get("name", "")
             msg = check.get("message", "").replace("✅", "").replace("⚠️", "").replace("❌", "").strip()
             message += f"\n*{name}*\n{msg}\n"

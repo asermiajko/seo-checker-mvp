@@ -107,13 +107,22 @@ def format_report(url: str, report: dict) -> str:
 
     # Get detailed checks
     detailed_checks = report.get("detailed_checks", [])
-    problems = [c for c in detailed_checks if c.get("status") == "problem"]
+    critical_problems = [c for c in detailed_checks if c.get("status") == "problem" and c.get("severity") == "critical"]
+    important_problems = [c for c in detailed_checks if c.get("status") == "problem" and c.get("severity") == "important"]
     ok_checks = [c for c in detailed_checks if c.get("status") == "ok"]
     
-    # Show problems first (most important)
-    if problems:
-        message += f"\n🔴 *Нужно исправить:*\n"
-        for check in problems:
+    # Show critical problems first
+    if critical_problems:
+        message += f"\n🔴 *Критичные проблемы:*\n"
+        for check in critical_problems:
+            name = check.get("name", "")
+            msg = check.get("message", "").replace("✅", "").replace("⚠️", "").replace("❌", "").strip()
+            message += f"\n*{name}*\n{msg}\n"
+    
+    # Show important problems
+    if important_problems:
+        message += f"\n🟡 *Важные проблемы:*\n"
+        for check in important_problems:
             name = check.get("name", "")
             msg = check.get("message", "").replace("✅", "").replace("⚠️", "").replace("❌", "").strip()
             message += f"\n*{name}*\n{msg}\n"

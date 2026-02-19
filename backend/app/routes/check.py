@@ -10,6 +10,9 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.checks.analytics import check_analytics
+from app.checks.check_canonical import check_canonical
+from app.checks.check_html_sitemap import check_html_sitemap
+from app.checks.check_opengraph import check_opengraph
 from app.checks.headings import check_headings
 from app.checks.meta_tags import check_meta_tags
 from app.checks.noindex import check_noindex
@@ -96,6 +99,9 @@ async def check_site(
                 check_noindex(request.site_url, client),
                 check_meta_tags(request.site_url, client),
                 check_headings(request.site_url, client),
+                check_canonical(request.site_url, client),
+                check_opengraph(request.site_url, client),
+                check_html_sitemap(request.site_url, client),
                 return_exceptions=True,
             )
 

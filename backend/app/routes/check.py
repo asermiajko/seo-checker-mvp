@@ -121,15 +121,16 @@ async def check_site(
                 other_results.append(result)
         
         # Phase 2: Run advanced checks (with Playwright and Schema)
-        advanced_checks = await asyncio.gather(
-            check_page_speed(request.site_url),  # Playwright check
-            check_schema_microdata(
-                request.site_url,
-                sitemap_urls,
-                httpx.AsyncClient(timeout=10.0, follow_redirects=True)
-            ),  # Schema check on 15 pages
-            return_exceptions=True,
-        )
+        async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as schema_client:
+            advanced_checks = await asyncio.gather(
+                check_page_speed(request.site_url),  # Playwright check
+                check_schema_microdata(
+                    request.site_url,
+                    sitemap_urls,
+                    schema_client
+                ),  # Schema check on 15 pages
+                return_exceptions=True,
+            )
         
         # Combine all results
         all_results = other_results + [

@@ -13,7 +13,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     """
     await update.message.reply_text(
         "ℹ️ **Как пользоваться:**\n\n"
-        "1️⃣ Откройте форму: https://checker.idalite.ru\n"
+        "1️⃣ Откройте форму: https://ravishing-smile-production-dc59.up.railway.app\n"
         "2️⃣ Введите URL сайта\n"
         "3️⃣ Получите отчёт здесь\n\n"
         "Я проверяю:\n"

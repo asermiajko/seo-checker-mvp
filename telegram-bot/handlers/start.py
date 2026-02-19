@@ -30,7 +30,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         await update.message.reply_text(
             "👋 Привет! Я проверяю SEO сайтов застройщиков.\n\n"
             "Чтобы проверить сайт:\n"
-            "1. Перейдите на https://checker.idalite.ru\n"
+            "1. Перейдите на https://ravishing-smile-production-dc59.up.railway.app\n"
             "2. Введите URL сайта\n"
             "3. Вернитесь сюда за результатом\n\n"
             "Или отправьте мне URL прямо сейчас."
@@ -42,7 +42,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     if not arg.startswith("check_"):
         await update.message.reply_text(
             "❌ Некорректный формат команды.\n\n"
-            "Используйте форму на https://checker.idalite.ru"
+            "Используйте форму на https://ravishing-smile-production-dc59.up.railway.app"
         )
         return
 
@@ -72,7 +72,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         logger.error(f"Invalid Base64 encoding: {e}")
         await update.message.reply_text(
             "❌ Некорректная ссылка.\n\n"
-            "Попробуйте перейти на https://checker.idalite.ru и проверить сайт заново."
+            "Попробуйте перейти на https://ravishing-smile-production-dc59.up.railway.app и проверить сайт заново."
         )
     except Exception as e:
         logger.error(f"Unexpected error in start_command: {e}", exc_info=True)

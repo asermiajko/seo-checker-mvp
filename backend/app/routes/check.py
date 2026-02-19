@@ -77,7 +77,8 @@ async def check_site(
     start_time = datetime.utcnow()
 
     # Check rate limit
-    await check_rate_limit(request.telegram_id, db)
+    # TODO: Включить перед production релизом! (временно отключено для отладки)
+    # await check_rate_limit(request.telegram_id, db)
 
     # Save CheckRequest to database
     check_request = CheckRequest(

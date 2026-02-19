@@ -133,6 +133,14 @@ async def check_site(
                 return_exceptions=True,
             )
         
+        # Debug: log advanced checks
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"Advanced checks results: {advanced_checks}")
+        for i, check in enumerate(advanced_checks):
+            if isinstance(check, Exception):
+                logger.error(f"Advanced check {i} failed with exception: {check}")
+        
         # Combine all results
         all_results = other_results + [
             r for r in advanced_checks if not isinstance(r, Exception)

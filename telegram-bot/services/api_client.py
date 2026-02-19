@@ -20,18 +20,25 @@ class APIClient:
         self.api_url = api_url.rstrip("/")
         self.timeout = timeout
 
-    async def check_site(self, site_url: str, telegram_id: int) -> dict[str, Any]:
+    async def check_site(self, site_url: str, telegram_id: int, session_id: str | None = None) -> dict[str, Any]:
         """Call backend API to check site SEO.
 
         Args:
             site_url: URL of the site to check
             telegram_id: Telegram user ID for rate limiting
+            session_id: Optional session ID from web form
 
         Returns:
             dict: API response with report data or error information
         """
         endpoint = f"{self.api_url}/api/check"
-        payload = {"site_url": site_url, "telegram_id": telegram_id}
+        payload = {
+            "site_url": site_url,
+            "telegram_id": telegram_id,
+        }
+        
+        if session_id:
+            payload["session_id"] = session_id
 
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:

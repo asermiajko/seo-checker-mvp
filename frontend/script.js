@@ -5,99 +5,60 @@
 // Telegram bot username
 const TELEGRAM_BOT_USERNAME = 'site_SEO_cheker_bot';
 
-// API endpoint для логирования (опционально)
-const API_ENDPOINT = '/api/track-check';
+// API endpoint для tracking сессий
+const API_ENDPOINT = 'https://seo-checker-backend-production.up.railway.app/api/track-session';
 
 // ==========================================
-// Form Submission
+// CTA Button Handler
 // ==========================================
 
-const form = document.getElementById('seoCheckForm');
-const submitButton = document.getElementById('submitButton');
+const openTelegramButton = document.getElementById('openTelegramButton');
 const statusMessage = document.getElementById('statusMessage');
 const statusIcon = document.getElementById('statusIcon');
 const statusText = document.getElementById('statusText');
 
-form.addEventListener('submit', async (e) => {
-    e.preventDefault();
+openTelegramButton.addEventListener('click', async () => {
+    // Генерируем уникальный session_id
+    const sessionId = crypto.randomUUID();
     
-    // Получить URL сайта
-    const siteUrl = document.getElementById('siteUrl').value.trim();
+    // Извлекаем UTM-метки из URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const utmData = {
+        session_id: sessionId,
+        utm_source: urlParams.get('utm_source'),
+        utm_medium: urlParams.get('utm_medium'),
+        utm_campaign: urlParams.get('utm_campaign'),
+        utm_term: urlParams.get('utm_term'),
+        utm_content: urlParams.get('utm_content'),
+        referrer: document.referrer || null,
+        user_agent: navigator.userAgent,
+    };
     
-    // Валидация
-    if (!validateUrl(siteUrl)) {
-        showStatus('error', 'Пожалуйста, введите корректный URL (например: https://example.ru)');
-        return;
-    }
-    
-    // Открыть Telegram бот с deep link
-    openTelegramBot(siteUrl);
-    
-    // Логировать в аналитику
-    trackEvent('telegram_bot_opened', { site_url: siteUrl });
-    
-    // Опционально: отправить на сервер для статистики
-    await logCheck(siteUrl);
-});
-
-// ==========================================
-// Telegram Deep Link
-// ==========================================
-
-function openTelegramBot(siteUrl) {
-    // Кодируем URL для передачи в deep link
-    // Формат: https://t.me/bot_name?start=check_ENCODED_URL
-    const encodedUrl = encodeURIComponent(siteUrl);
-    const telegramDeepLink = `https://t.me/${TELEGRAM_BOT_USERNAME}?start=check_${encodedUrl}`;
-    
-    // Показать сообщение
-    showStatus('success', '✅ Открываем Telegram... Напишите /start боту для получения отчёта.');
-    
-    // Открыть Telegram
-    window.open(telegramDeepLink, '_blank');
-    
-    // Очистить форму
-    setTimeout(() => {
-        form.reset();
-    }, 1000);
-}
-
-// ==========================================
-// API: Log Check (опционально)
-// ==========================================
-
-async function logCheck(siteUrl) {
+    // Отправляем на backend для сохранения
     try {
         await fetch(API_ENDPOINT, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                site_url: siteUrl,
-                timestamp: new Date().toISOString(),
-                user_agent: navigator.userAgent,
-                referrer: document.referrer || 'direct'
-            })
+            body: JSON.stringify(utmData),
         });
     } catch (error) {
-        // Не критично, просто логируем
-        console.log('Failed to log check:', error);
+        console.log('Failed to track session:', error);
     }
-}
-
-// ==========================================
-// Validation
-// ==========================================
-
-function validateUrl(url) {
-    try {
-        const urlObj = new URL(url);
-        return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
-    } catch {
-        return false;
-    }
-}
+    
+    // Формируем deep link для Telegram
+    const telegramDeepLink = `https://t.me/${TELEGRAM_BOT_USERNAME}?start=session_${sessionId}`;
+    
+    // Показываем сообщение
+    showStatus('success', '✅ Открываем Telegram... Отправьте боту URL сайта для проверки.');
+    
+    // Открываем Telegram
+    window.open(telegramDeepLink, '_blank');
+    
+    // Трекаем событие в аналитику
+    trackEvent('telegram_bot_opened', { session_id: sessionId });
+});
 
 // ==========================================
 // Status Messages
@@ -107,7 +68,6 @@ function showStatus(type, message) {
     statusMessage.style.display = 'block';
     statusMessage.className = `status-message status-message--${type}`;
     
-    // Иконки для разных статусов
     const icons = {
         success: '✅',
         error: '❌',
@@ -117,7 +77,6 @@ function showStatus(type, message) {
     statusIcon.textContent = icons[type];
     statusText.textContent = message;
     
-    // Скролл к сообщению
     statusMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
@@ -138,18 +97,3 @@ function trackEvent(eventName, params = {}) {
     
     console.log('Event tracked:', eventName, params);
 }
-
-// ==========================================
-// Input Enhancement
-// ==========================================
-
-// Auto-format URL (add https:// if missing)
-const urlInput = document.getElementById('siteUrl');
-urlInput.addEventListener('blur', (e) => {
-    let value = e.target.value.trim();
-    
-    // Если есть значение и нет протокола, добавить https://
-    if (value && !value.match(/^https?:\/\//i)) {
-        e.target.value = 'https://' + value;
-    }
-});

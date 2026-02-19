@@ -1,6 +1,7 @@
 """Pydantic schemas for API requests and responses."""
 
 from typing import Any, Literal, Optional
+from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -10,6 +11,7 @@ class CheckRequestSchema(BaseModel):
 
     site_url: str = Field(..., min_length=1, max_length=500)
     telegram_id: int = Field(..., gt=0)
+    session_id: Optional[UUID] = None
 
     @field_validator("site_url")
     @classmethod
@@ -92,3 +94,36 @@ class ErrorResponseSchema(BaseModel):
     """Error response schema."""
 
     error: dict[str, Any]
+
+
+# ==========================================
+# Web Session Tracking Schemas
+# ==========================================
+
+class TrackSessionRequestSchema(BaseModel):
+    """Request schema for POST /api/track-session."""
+
+    session_id: UUID
+    utm_source: Optional[str] = Field(None, max_length=255)
+    utm_medium: Optional[str] = Field(None, max_length=255)
+    utm_campaign: Optional[str] = Field(None, max_length=255)
+    utm_term: Optional[str] = Field(None, max_length=255)
+    utm_content: Optional[str] = Field(None, max_length=255)
+    referrer: Optional[str] = None
+    user_agent: Optional[str] = None
+
+
+class SessionResponseSchema(BaseModel):
+    """Response schema for session tracking."""
+
+    session_id: UUID
+    status: Literal["created", "updated"]
+    message: str
+
+
+class UpdateSessionTelegramSchema(BaseModel):
+    """Request schema for updating session with Telegram data."""
+
+    session_id: UUID
+    telegram_id: int = Field(..., gt=0)
+    telegram_username: Optional[str] = Field(None, max_length=255)

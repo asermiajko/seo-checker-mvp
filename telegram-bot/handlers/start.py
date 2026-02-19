@@ -1,81 +1,89 @@
 """Start command handler for SEO Checker bot."""
 
-import base64
 import logging
 import os
+from uuid import UUID
+
+import httpx
 from telegram import Update
 from telegram.ext import ContextTypes
-
-from services.api_client import APIClient
 
 logger = logging.getLogger(__name__)
 
 API_URL = os.getenv("API_URL", "http://localhost:8000")
-api_client = APIClient(api_url=API_URL)
 
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Handle /start command with optional deep link.
+    """Handle /start command with optional session deep link.
 
     Args:
         update: Telegram update object
         context: Bot context with args
 
-    Deep link format: /start check_BASE64_ENCODED_URL
-    Example: /start check_aHR0cHM6Ly9leGFtcGxlLnJ1
+    Deep link format: /start session_UUID
+    Example: /start session_550e8400-e29b-41d4-a716-446655440000
     """
     user_id = update.effective_user.id
+    username = update.effective_user.username
 
+    # Case 1: No arguments - just welcome message
     if not context.args:
         await update.message.reply_text(
             "👋 Привет! Я проверяю SEO сайтов застройщиков.\n\n"
-            "Чтобы проверить сайт:\n"
-            "1. Перейдите на https://ravishing-smile-production-dc59.up.railway.app\n"
-            "2. Введите URL сайта\n"
-            "3. Вернитесь сюда за результатом\n\n"
-            "Или отправьте мне URL прямо сейчас."
+            "📝 Отправьте мне URL сайта (например: https://example.com) и я проведу проверку 13 SEO-параметров.\n\n"
+            "⏱ Проверка займёт ~30-60 секунд.\n\n"
+            "Команды:\n"
+            "/help — подробная справка"
         )
         return
 
     arg = context.args[0]
 
-    if not arg.startswith("check_"):
-        await update.message.reply_text(
-            "❌ Некорректный формат команды.\n\n"
-            "Используйте форму на https://ravishing-smile-production-dc59.up.railway.app"
-        )
-        return
+    # Case 2: Session deep link from web form
+    if arg.startswith("session_"):
+        try:
+            session_id_str = arg.replace("session_", "")
+            session_id = UUID(session_id_str)
 
-    try:
-        encoded_url = arg.replace("check_", "")
-        site_url = base64.b64decode(encoded_url).decode("utf-8")
+            logger.info(f"User {user_id} opened bot via web session: {session_id}")
 
-        logger.info(f"User {user_id} checking site: {site_url}")
+            # Update session with Telegram data
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.post(
+                    f"{API_URL}/api/update-session-telegram",
+                    json={
+                        "session_id": str(session_id),
+                        "telegram_id": user_id,
+                        "telegram_username": username,
+                    },
+                )
 
-        await update.message.reply_text(
-            f"⏳ Проверяю сайт {site_url}...\n\nЭто займёт ~30 секунд."
-        )
+                if response.status_code == 200:
+                    logger.info(f"Session {session_id} updated with Telegram data")
+                else:
+                    logger.warning(
+                        f"Failed to update session {session_id}: {response.status_code}"
+                    )
 
-        result = await api_client.check_site(site_url, user_id)
+            # Store session_id in user context for future checks
+            context.user_data["session_id"] = str(session_id)
 
-        if "error" in result:
             await update.message.reply_text(
-                f"⚠️ {result['error'].get('message', 'Произошла ошибка')}"
+                "✅ Отлично! Теперь отправьте мне URL сайта для проверки.\n\n"
+                "Пример: https://example.com\n\n"
+                "⏱ Проверка займёт ~30-60 секунд."
             )
-        else:
-            from services.formatter import format_report
 
-            report_text = format_report(result)
-            await update.message.reply_text(report_text, parse_mode="Markdown")
+        except (ValueError, IndexError) as e:
+            logger.error(f"Invalid session_id format: {e}")
+            await update.message.reply_text(
+                "❌ Некорректная ссылка.\n\n"
+                "Попробуйте открыть бота заново с главной страницы."
+            )
 
-    except (ValueError, UnicodeDecodeError) as e:
-        logger.error(f"Invalid Base64 encoding: {e}")
+    # Case 3: Unknown argument format
+    else:
         await update.message.reply_text(
-            "❌ Некорректная ссылка.\n\n"
-            "Попробуйте перейти на https://ravishing-smile-production-dc59.up.railway.app и проверить сайт заново."
-        )
-    except Exception as e:
-        logger.error(f"Unexpected error in start_command: {e}", exc_info=True)
-        await update.message.reply_text(
-            "⚠️ Произошла непредвиденная ошибка. Попробуйте позже."
+            "👋 Привет! Отправьте мне URL сайта для проверки.\n\n"
+            "Пример: https://example.com"
         )

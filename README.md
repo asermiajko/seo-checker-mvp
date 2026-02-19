@@ -14,8 +14,9 @@
 SEO Checker MVP — это Telegram-бот и backend API для быстрой проверки базовых SEO-настроек сайтов.
 
 **Возможности:**
-- ✅ 6 автоматических SEO-проверок
+- ✅ 13 автоматических SEO-проверок
 - ✅ Telegram-бот с красивыми отчётами
+- ✅ UTM-tracking и аналитика конверсий
 - ✅ Rate limiting (5 проверок/час)
 - ✅ PostgreSQL database с историей
 - ✅ REST API для интеграций
@@ -238,7 +239,8 @@ Content-Type: application/json
 
 {
   "site_url": "https://example.com",
-  "telegram_id": 123456789
+  "telegram_id": 123456789,
+  "session_id": "550e8400-e29b-41d4-a716-446655440000"  // Optional
 }
 ```
 
@@ -261,6 +263,51 @@ Content-Type: application/json
 ```
 
 **Rate Limiting**: 5 requests per hour per `telegram_id`
+
+#### Track Session (NEW)
+```http
+POST /api/track-session
+Content-Type: application/json
+
+{
+  "session_id": "550e8400-e29b-41d4-a716-446655440000",
+  "utm_source": "google",
+  "utm_medium": "cpc",
+  "utm_campaign": "seo_check",
+  "referrer": "https://google.com",
+  "user_agent": "Mozilla/5.0..."
+}
+```
+
+**Response:**
+```json
+{
+  "session_id": "550e8400-e29b-41d4-a716-446655440000",
+  "status": "created",
+  "message": "Session tracked successfully"
+}
+```
+
+#### Update Session with Telegram Data (NEW)
+```http
+POST /api/update-session-telegram
+Content-Type: application/json
+
+{
+  "session_id": "550e8400-e29b-41d4-a716-446655440000",
+  "telegram_id": 123456789,
+  "telegram_username": "user123"
+}
+```
+
+**Response:**
+```json
+{
+  "session_id": "550e8400-e29b-41d4-a716-446655440000",
+  "status": "updated",
+  "message": "Telegram data added to session"
+}
+```
 
 ---
 
@@ -306,6 +353,25 @@ railway up
 
 ## 📊 Database Schema
 
+### Table: `web_sessions` (NEW)
+Tracks web form visits with UTM parameters and Telegram attribution.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | Integer | Primary key |
+| session_id | UUID | Unique session identifier |
+| utm_source | String(255) | UTM source parameter |
+| utm_medium | String(255) | UTM medium parameter |
+| utm_campaign | String(255) | UTM campaign parameter |
+| utm_term | String(255) | UTM term parameter |
+| utm_content | String(255) | UTM content parameter |
+| referrer | Text | HTTP referrer |
+| user_agent | Text | Browser user agent |
+| telegram_id | BigInteger | User Telegram ID (filled on bot open) |
+| telegram_username | String(255) | Telegram username |
+| bot_started_at | Timestamp | When user opened bot |
+| created_at | Timestamp | Session creation time |
+
 ### Table: `check_requests`
 Stores user SEO check requests.
 
@@ -315,6 +381,7 @@ Stores user SEO check requests.
 | telegram_id | BigInteger | User Telegram ID |
 | site_url | String(500) | Site URL |
 | status | String(50) | pending/completed/failed |
+| session_id | UUID | FK to web_sessions (nullable) |
 | created_at | Timestamp | Request time |
 
 ### Table: `check_results`
@@ -334,16 +401,47 @@ Stores SEO check results with reports.
 
 ---
 
+## 🔄 User Flow
+
+### Web Form → Telegram Bot → Check
+
+1. **Landing Page** (`frontend/`)
+   - User clicks "Открыть Telegram-бот"
+   - Generates unique `session_id` (UUID)
+   - Tracks UTM parameters from URL
+   - Sends POST to `/api/track-session`
+   - Opens Telegram with deep link: `https://t.me/bot?start=session_{UUID}`
+
+2. **Telegram Bot** (`telegram-bot/`)
+   - Bot receives `/start session_{UUID}`
+   - Updates session with `telegram_id` + `username`
+   - User sends website URL (e.g., `https://example.com`)
+   - Bot calls `/api/check` with `session_id`
+   - User receives formatted SEO report
+
+3. **Attribution** (Database)
+   - Full chain: UTM → Telegram User → Checks
+   - Analytics: conversion funnel by source/campaign
+   - Multiple checks per session supported
+
+---
+
 ## 🤖 Telegram Bot Commands
 
 ### `/start`
 Welcome message with instructions.
 
-**With deep link:**
+**With session deep link (from web form):**
 ```
-/start check_BASE64_ENCODED_URL
+/start session_550e8400-e29b-41d4-a716-446655440000
 ```
-Automatically triggers SEO check for decoded URL.
+Updates web session with Telegram user data and prompts for URL.
+
+**Without arguments:**
+```
+/start
+```
+Shows welcome message and asks user to send URL directly.
 
 ### `/help`
 Shows bot features and usage instructions.
@@ -416,6 +514,9 @@ Shows bot features and usage instructions.
 
 ## 📚 Documentation
 
+- **[CHANGES_SUMMARY.md](CHANGES_SUMMARY.md)** — Summary of UTM tracking implementation
+- **[UTM_TRACKING_IMPLEMENTATION.md](UTM_TRACKING_IMPLEMENTATION.md)** — Full architecture and analytics
+- **[DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)** — Step-by-step deployment guide
 - **[PROGRESS.md](PROGRESS.md)** — Detailed task tracking
 - **[HANDOFF.md](HANDOFF.md)** — Project handoff document
 - **[backend/README_DEPLOYMENT.md](backend/README_DEPLOYMENT.md)** — Backend deployment guide

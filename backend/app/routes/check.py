@@ -87,6 +87,7 @@ async def check_site(
         telegram_id=request.telegram_id,
         site_url=request.site_url,
         status="running",
+        session_id=request.session_id,
     )
     db.add(check_request)
     await db.commit()

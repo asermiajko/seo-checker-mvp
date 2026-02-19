@@ -48,8 +48,11 @@ async def handle_url(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     )
 
     try:
+        # Get session_id from user context (if came from web form)
+        session_id = context.user_data.get("session_id")
+
         # Call API to check the site
-        result = await api_client.check_site(text, user_id)
+        result = await api_client.check_site(text, user_id, session_id)
 
         # Delete processing message
         try:
@@ -73,7 +76,7 @@ async def handle_url(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         logger.error(f"Error checking URL {text}: {e}")
         await update.message.reply_text(
             "❌ Произошла ошибка при проверке сайта.\n\n"
-            f"Попробуйте перейти на https://ravishing-smile-production-dc59.up.railway.app и проверить сайт заново."
+            "Попробуйте позже или проверьте корректность URL."
         )
 
 

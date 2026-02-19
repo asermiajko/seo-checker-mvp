@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.routes.check import router as check_router
+from app.routes.session import router as session_router
 
 app = FastAPI(
     title="SEO Checker API", description="API for checking website SEO health", version="1.0.0"
@@ -23,6 +24,7 @@ app.add_middleware(
 )
 
 app.include_router(check_router)
+app.include_router(session_router)
 
 
 @app.get("/")

@@ -48,20 +48,19 @@ async def handle_url(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
 
     try:
         # Call API to check the site
-        result = await api_client.check_url(text, user_id)
+        result = await api_client.check_site(text, user_id)
 
-        if result.get("status") == "success":
-            report = result.get("report", {})
-            
-            # Format report message
-            message = format_report(text, report)
-            await update.message.reply_text(message, parse_mode="Markdown")
-        else:
-            error_msg = result.get("error", "Неизвестная ошибка")
+        if "error" in result:
+            error_data = result["error"]
+            error_msg = error_data.get("message", "Неизвестная ошибка")
             await update.message.reply_text(
                 f"❌ Ошибка при проверке:\n{error_msg}\n\n"
                 "Попробуйте позже или проверьте URL."
             )
+        else:
+            # Success - format and send report
+            message = format_report(text, result)
+            await update.message.reply_text(message, parse_mode="Markdown")
 
     except Exception as e:
         logger.error(f"Error checking URL {text}: {e}")
@@ -76,50 +75,52 @@ def format_report(url: str, report: dict) -> str:
 
     Args:
         url: Checked URL
-        report: SEO report data
+        report: SEO report data from API
 
     Returns:
         Formatted message string
     """
-    total = report.get("total_checks", 0)
-    passed = report.get("passed_checks", 0)
-    failed = report.get("failed_checks", 0)
-    warnings = report.get("warnings", 0)
-
-    score = (passed / total * 100) if total > 0 else 0
-
+    score = report.get("score", 0)
+    problems_critical = report.get("problems_critical", 0)
+    problems_important = report.get("problems_important", 0)
+    checks_ok = report.get("checks_ok", 0)
+    
     # Determine emoji based on score
-    if score >= 80:
+    if score >= 8.0:
         emoji = "✅"
-    elif score >= 60:
+    elif score >= 6.0:
         emoji = "⚠️"
     else:
         emoji = "❌"
 
     message = f"{emoji} *SEO Отчёт*\n\n"
     message += f"🔗 URL: {url}\n"
-    message += f"📊 Результат: {passed}/{total} проверок пройдено\n"
-    message += f"⭐ Оценка: {score:.0f}%\n\n"
+    message += f"⭐ Оценка: {score:.1f}/10\n\n"
 
-    if failed > 0:
-        message += f"❌ Не пройдено: {failed}\n"
-    if warnings > 0:
-        message += f"⚠️ Предупреждений: {warnings}\n"
+    if checks_ok > 0:
+        message += f"✅ Успешно: {checks_ok}\n"
+    if problems_critical > 0:
+        message += f"🔴 Критичные проблемы: {problems_critical}\n"
+    if problems_important > 0:
+        message += f"🟡 Важные проблемы: {problems_important}\n"
 
-    message += f"\n🔍 Детали проверки:\n"
+    # Add top priorities
+    top_priorities = report.get("top_priorities", [])
+    if top_priorities:
+        message += f"\n🎯 *Приоритетные задачи:*\n"
+        for i, priority in enumerate(top_priorities[:3], 1):
+            title = priority.get("title", "")
+            message += f"{i}. {title}\n"
 
-    # Add check results
-    checks = report.get("checks", {})
-    for category, category_checks in checks.items():
-        if isinstance(category_checks, dict):
-            for check_name, check_data in category_checks.items():
-                status = check_data.get("status", "unknown")
-                if status == "passed":
-                    message += f"✅ {check_name}\n"
-                elif status == "failed":
-                    message += f"❌ {check_name}\n"
-                elif status == "warning":
-                    message += f"⚠️ {check_name}\n"
+    # Add categories summary
+    categories = report.get("categories", [])
+    if categories:
+        message += f"\n📊 *По категориям:*\n"
+        for category in categories:
+            cat_name = category.get("name", "")
+            passed = category.get("checks_passed", 0)
+            total = category.get("total_checks", 0)
+            message += f"• {cat_name}: {passed}/{total}\n"
 
     message += f"\n📱 Полный отчёт: https://ravishing-smile-production-dc59.up.railway.app"
 

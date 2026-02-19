@@ -41,14 +41,21 @@ async def handle_url(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         return
 
     # Show processing message
-    await update.message.reply_text(
+    processing_msg = await update.message.reply_text(
         "⏳ Проверяю сайт, пожалуйста подождите...\n\n"
-        f"URL: {text}"
+        f"URL: {text}\n\n"
+        "⏱ Обычно проверка занимает 10-15 секунд"
     )
 
     try:
         # Call API to check the site
         result = await api_client.check_site(text, user_id)
+
+        # Delete processing message
+        try:
+            await processing_msg.delete()
+        except:
+            pass
 
         if "error" in result:
             error_data = result["error"]

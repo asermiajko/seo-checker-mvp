@@ -13,6 +13,8 @@ from app.checks.analytics import check_analytics
 from app.checks.check_canonical import check_canonical
 from app.checks.check_html_sitemap import check_html_sitemap
 from app.checks.check_opengraph import check_opengraph
+from app.checks.check_page_speed import check_page_speed
+from app.checks.check_schema import check_schema_microdata
 from app.checks.headings import check_headings
 from app.checks.meta_tags import check_meta_tags
 from app.checks.noindex import check_noindex
@@ -91,11 +93,11 @@ async def check_site(
     await db.refresh(check_request)
 
     try:
-        # Run all checks in parallel
+        # Phase 1: Run basic checks in parallel
         async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
-            check_results = await asyncio.gather(
+            basic_checks = await asyncio.gather(
                 check_robots_txt(request.site_url, client),
-                check_sitemap_xml(request.site_url, client),
+                check_sitemap_xml(request.site_url, client),  # Returns (CheckResult, urls)
                 check_analytics(request.site_url, client),
                 check_noindex(request.site_url, client),
                 check_meta_tags(request.site_url, client),
@@ -105,6 +107,34 @@ async def check_site(
                 check_html_sitemap(request.site_url, client),
                 return_exceptions=True,
             )
+        
+        # Extract sitemap result and URLs
+        sitemap_result = None
+        sitemap_urls = []
+        other_results = []
+        
+        for result in basic_checks:
+            if isinstance(result, tuple):  # check_sitemap_xml returns (CheckResult, urls)
+                sitemap_result, sitemap_urls = result
+                other_results.append(sitemap_result)
+            elif not isinstance(result, Exception):
+                other_results.append(result)
+        
+        # Phase 2: Run advanced checks (with Playwright and Schema)
+        advanced_checks = await asyncio.gather(
+            check_page_speed(request.site_url),  # Playwright check
+            check_schema_microdata(
+                request.site_url,
+                sitemap_urls,
+                httpx.AsyncClient(timeout=10.0, follow_redirects=True)
+            ),  # Schema check on 15 pages
+            return_exceptions=True,
+        )
+        
+        # Combine all results
+        all_results = other_results + [
+            r for r in advanced_checks if not isinstance(r, Exception)
+        ]
 
         # Filter out exceptions and convert to CheckResult
         from app.checks.base import CheckResult as CheckResultData
@@ -112,7 +142,7 @@ async def check_site(
         valid_results: list[CheckResultData] = []
         failed_count = 0
 
-        for result in check_results:
+        for result in all_results:
             if isinstance(result, Exception):
                 failed_count += 1
             elif isinstance(result, CheckResultData):
@@ -149,7 +179,7 @@ async def check_site(
             "metadata": {
                 "checked_at": start_time.isoformat() + "Z",
                 "processing_time_sec": processing_time,
-                "checks_total": len(check_results),
+                "checks_total": len(basic_checks) + len(advanced_checks),
                 "checks_completed": len(valid_results),
                 "checks_failed": failed_count,
             },

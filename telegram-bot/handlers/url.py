@@ -122,6 +122,4 @@ def format_report(url: str, report: dict) -> str:
             total = category.get("total_checks", 0)
             message += f"• {cat_name}: {passed}/{total}\n"
 
-    message += f"\n📱 Полный отчёт: https://ravishing-smile-production-dc59.up.railway.app"
-
     return message

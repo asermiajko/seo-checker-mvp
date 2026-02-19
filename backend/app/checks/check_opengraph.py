@@ -17,7 +17,13 @@ async def check_opengraph(site_url: str, client: httpx.AsyncClient) -> CheckResu
         CheckResult with status ok/partial/problem/error
     """
     try:
-        response = await client.get(site_url, timeout=10.0)
+        # Use browser-like headers to get better content
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "ru-RU,ru;q=0.9,en;q=0.8",
+        }
+        response = await client.get(site_url, timeout=15.0, headers=headers)
 
         if response.status_code != 200:
             return CheckResult(
@@ -30,14 +36,30 @@ async def check_opengraph(site_url: str, client: httpx.AsyncClient) -> CheckResu
 
         soup = BeautifulSoup(response.content, "html.parser")
 
-        # Check for OpenGraph tags
-        og_title = soup.find("meta", property="og:title")
-        og_description = soup.find("meta", property="og:description")
-        og_image = soup.find("meta", property="og:image")
+        # Check for OpenGraph tags (try both property= and name=)
+        og_title = soup.find("meta", property="og:title") or soup.find(
+            "meta", attrs={"name": "og:title"}
+        )
+        og_description = soup.find("meta", property="og:description") or soup.find(
+            "meta", attrs={"name": "og:description"}
+        )
+        og_image = soup.find("meta", property="og:image") or soup.find(
+            "meta", attrs={"name": "og:image"}
+        )
 
         has_title = og_title is not None
         has_description = og_description is not None
         has_image = og_image is not None
+
+        # Detect JS frameworks
+        html_lower = response.text.lower()
+        has_js_framework = (
+            soup.find(id="root")
+            or soup.find(id="__next")
+            or soup.find(id="app")
+            or "react" in html_lower
+            or "vue" in html_lower
+        )
 
         present_count = sum([has_title, has_description, has_image])
         missing_tags = []
@@ -58,20 +80,30 @@ async def check_opengraph(site_url: str, client: httpx.AsyncClient) -> CheckResu
                 category="content",
             )
         elif present_count == 0:
+            disclaimer = (
+                " (сайт может использовать JS-рендеринг)"
+                if has_js_framework
+                else ""
+            )
             return CheckResult(
                 id="content-opengraph",
                 name="OpenGraph Tags",
                 status="problem",
-                message="❌ OpenGraph теги отсутствуют полностью",
+                message=f"❌ OpenGraph теги отсутствуют полностью{disclaimer}",
                 severity="critical",
                 category="content",
             )
         else:
+            disclaimer = (
+                " (сайт может использовать JS-рендеринг, проверьте вручную)"
+                if has_js_framework
+                else ""
+            )
             return CheckResult(
                 id="content-opengraph",
                 name="OpenGraph Tags",
                 status="partial",
-                message=f"⚠️ OpenGraph: отсутствуют теги - {', '.join(missing_tags)}",
+                message=f"⚠️ OpenGraph: отсутствуют теги - {', '.join(missing_tags)}{disclaimer}",
                 severity="important",
                 category="content",
             )

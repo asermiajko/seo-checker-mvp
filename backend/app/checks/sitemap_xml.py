@@ -24,7 +24,12 @@ async def check_sitemap_xml(
     sitemap_urls: List[str] = []
 
     try:
-        response = await client.get(url, timeout=10.0)
+        # Use longer timeout and browser-like headers for better compatibility
+        headers = {
+            "User-Agent": "Mozilla/5.0 (compatible; SEOChecker/1.0; +https://seo-checker.com/bot)",
+            "Accept": "application/xml,text/xml,*/*",
+        }
+        response = await client.get(url, timeout=15.0, headers=headers)
 
         if response.status_code != 200:
             return (

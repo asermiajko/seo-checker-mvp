@@ -2,8 +2,8 @@
 // Configuration
 // ==========================================
 
-// Telegram bot username (замените на ваш)
-const TELEGRAM_BOT_USERNAME = 'your_seo_checker_bot';
+// Telegram bot username
+const TELEGRAM_BOT_USERNAME = 'site_SEO_cheker_bot';
 
 // API endpoint для логирования (опционально)
 const API_ENDPOINT = '/api/track-check';

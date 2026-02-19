@@ -13,7 +13,7 @@ from app.checks.analytics import check_analytics
 from app.checks.check_canonical import check_canonical
 from app.checks.check_html_sitemap import check_html_sitemap
 from app.checks.check_opengraph import check_opengraph
-from app.checks.check_page_speed import check_page_speed
+# from app.checks.check_page_speed import check_page_speed  # TODO: Add back with Docker or PageSpeed API
 from app.checks.check_schema import check_schema_microdata
 from app.checks.headings import check_headings
 from app.checks.meta_tags import check_meta_tags
@@ -120,10 +120,11 @@ async def check_site(
             elif not isinstance(result, Exception):
                 other_results.append(result)
         
-        # Phase 2: Run advanced checks (with Playwright and Schema)
+        # Phase 2: Run advanced checks (Schema.org microdata)
+        # NOTE: check_page_speed (Playwright) temporarily disabled - requires Docker setup
         async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as schema_client:
             advanced_checks = await asyncio.gather(
-                check_page_speed(request.site_url),  # Playwright check
+                # check_page_speed(request.site_url),  # TODO: Re-enable with Docker or PageSpeed API
                 check_schema_microdata(
                     request.site_url,
                     sitemap_urls,

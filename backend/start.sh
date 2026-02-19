@@ -1,8 +1,9 @@
 #!/bin/bash
 set -e
 
-echo "Installing Playwright browsers..."
-playwright install --with-deps chromium
+# NOTE: Playwright installation disabled until FCP check is re-enabled
+# echo "Installing Playwright browsers..."
+# playwright install --with-deps chromium
 
 echo "Running database migrations..."
 alembic upgrade head

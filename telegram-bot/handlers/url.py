@@ -99,33 +99,31 @@ def format_report(url: str, report: dict) -> str:
 
     # Show summary
     message += f"📊 *Итого:*\n"
-    if checks_ok > 0:
-        message += f"✅ Успешно: {checks_ok}\n"
+    message += f"✅ Хорошо: {checks_ok}\n"
     if problems_critical > 0:
         message += f"🔴 Критичных: {problems_critical}\n"
     if problems_important > 0:
         message += f"🟡 Важных: {problems_important}\n"
 
-    # Show problems first (most important)
+    # Get detailed checks
     detailed_checks = report.get("detailed_checks", [])
     problems = [c for c in detailed_checks if c.get("status") == "problem"]
+    ok_checks = [c for c in detailed_checks if c.get("status") == "ok"]
     
+    # Show problems first (most important)
     if problems:
-        message += f"\n🔴 *Что нужно исправить:*\n"
+        message += f"\n🔴 *Нужно исправить:*\n"
         for check in problems:
             name = check.get("name", "")
             msg = check.get("message", "").replace("✅", "").replace("⚠️", "").replace("❌", "").strip()
-            message += f"\n• *{name}*\n{msg}\n"
+            message += f"\n*{name}*\n{msg}\n"
 
-    # Show successful checks
-    ok_checks = [c for c in detailed_checks if c.get("status") == "ok"]
+    # Show all successful checks
     if ok_checks:
-        message += f"\n✅ *Что уже хорошо:*\n"
-        for check in ok_checks[:3]:  # Show first 3
+        message += f"\n✅ *Всё хорошо:*\n"
+        for check in ok_checks:
             name = check.get("name", "")
-            message += f"• {name}\n"
-        
-        if len(ok_checks) > 3:
-            message += f"• _и ещё {len(ok_checks) - 3} проверок_\n"
+            msg = check.get("message", "").replace("✅", "").replace("⚠️", "").replace("❌", "").strip()
+            message += f"\n*{name}*\n{msg}\n"
 
     return message
